@@ -21,3 +21,17 @@ exports.getAllMovies = async (req, res, next) => {
     next(error);
   }
 };
+exports.getMovieById = async (req, res, next) => {
+  try {
+    const pool = await poolPromise;
+    const { id } = req.params;
+
+    const result = await pool.request()
+      .input("id", id)
+      .query("SELECT * FROM Movies WHERE MovieID = @id");
+
+    res.status(200).json(result.recordset[0]);
+  } catch (error) {
+    next(error);
+  }
+};
