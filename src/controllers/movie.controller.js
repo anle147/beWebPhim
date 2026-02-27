@@ -35,3 +35,20 @@ exports.getMovieById = async (req, res, next) => {
     next(error);
   }
 };
+exports.searchMovies = async (req, res, next) => {
+  try {
+    const pool = await poolPromise;
+    const { keyword } = req.query;
+
+    const result = await pool.request()
+      .input("keyword", `%${keyword}%`)
+      .query(`
+        SELECT * FROM Movies
+        WHERE Title COLLATE SQL_Latin1_General_CP1_CI_AI LIKE @keyword
+      `);
+
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    next(error);
+  }
+};
