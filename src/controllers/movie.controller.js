@@ -16,7 +16,7 @@ exports.getAllMovies = async (req, res, next) => {
 
     const result = await request.query(query);
 
-    res.status(200).json(result.recordset);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
