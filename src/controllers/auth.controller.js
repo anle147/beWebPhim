@@ -13,10 +13,31 @@ exports.register = async (req, res) => {
 
     const pool = await poolPromise;
 
-    // Kiểm tra username đã tồn tại chưa
-    const checkUser = await pool.request()
-      .input("Username", username)
-      .query("SELECT * FROM Users WHERE Username = @Username");
+    // Kiểm tra username hoặc email đã tồn tại chưa
+const checkUser = await pool.request()
+  .input("Username", username)
+  .input("Email", email)
+  .query(`
+    SELECT Username, Email 
+    FROM Users 
+    WHERE Username = @Username OR Email = @Email
+  `);
+
+    if (checkUser.recordset.length > 0) {
+    const existingUser = checkUser.recordset[0];
+
+    if (existingUser.Username === username) {
+        return res.status(400).json({
+        message: "Tên đăng nhập đã tồn tại",
+        });
+    }
+
+    if (existingUser.Email === email) {
+        return res.status(400).json({
+        message: "Email đã tồn tại",
+        });
+    }
+    }
 
     if (checkUser.recordset.length > 0) {
       return res.status(400).json({
