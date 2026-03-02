@@ -1,5 +1,6 @@
 const { poolPromise } = require("../config/db");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
   try {
@@ -70,4 +71,80 @@ const checkUser = await pool.request()
       message: "Lỗi server",
     });
   }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        message: "Vui lòng nhập đầy đủ thông tin",
+      });
+    }
+
+    const pool = await poolPromise;
+
+    // Tìm user theo username
+    const result = await pool.request()
+      .input("Username", username)
+      .query(`
+        SELECT UserID, Username, PasswordHash, Role
+        FROM Users
+        WHERE Username = @Username
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(400).json({
+        message: "Tên đăng nhập hoặc mật khẩu không đúng",
+      });
+    }
+
+    const user = result.recordset[0];
+
+    // So sánh mật khẩu
+    const isMatch = await bcrypt.compare(password, user.PasswordHash);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Tên đăng nhập hoặc mật khẩu không đúng",
+      });
+    }
+
+    // Tạo token JWT
+    const token = jwt.sign(
+      {
+        id: user.Id,
+        username: user.Username,
+        role: user.Role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    res.json({
+      message: "Đăng nhập thành công 🎉",
+      token,
+      user: {
+        id: user.Id,
+        username: user.Username,
+        role: user.Role,
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Lỗi server",
+    });
+  }
+};
+
+exports.profile = (req, res) => {
+  res.json({
+    message: "Đây là route đã đăng nhập",
+    user: req.user,
+  });
 };
