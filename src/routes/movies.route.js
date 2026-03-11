@@ -17,4 +17,7 @@ router.get("/:id", movieController.getMovieById);
 router.get("/:id/actors", movieController.getMovieActors);
 // get phim do dien vien do dong
 router.get("/actor/:actorId", movieController.getMoviesByActor);
+
+router.get("/:id/comments", movieController.getMovieComments);
+router.post("/:id/comments", movieController.addComment);
 module.exports = router;

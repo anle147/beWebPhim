@@ -170,3 +170,58 @@ exports.getMoviesByActor = async (req, res, next) => {
     next(error);
   }
 };
+
+// lấy comment theo phim
+exports.getMovieComments = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+    const { id } = req.params;
+
+    const result = await pool.request()
+      .input("movieId", id)
+      .query(`
+        SELECT 
+          C.CommentID,
+          C.Content,
+          C.CreatedAt,
+          U.Username
+        FROM Comments C
+        JOIN Users U ON C.UserID = U.UserID
+        WHERE C.MovieID = @movieId
+        ORDER BY C.CreatedAt DESC
+      `);
+
+    res.status(200).json(result.recordset);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// thêm comment
+exports.addComment = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+    const { userId, content } = req.body;
+    const { id } = req.params;
+
+    await pool.request()
+      .input("userId", userId)
+      .input("movieId", id)
+      .input("content", content)
+      .query(`
+        INSERT INTO Comments (UserID, MovieID, Content, CreatedAt)
+        VALUES (@userId, @movieId, @content, GETDATE())
+      `);
+
+    res.status(201).json({
+      message: "Comment added"
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
