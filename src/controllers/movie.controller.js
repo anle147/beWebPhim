@@ -117,3 +117,56 @@ exports.getFavoriteMovies = async (req, res, next) => {
     next(error);
   }
 };
+
+
+exports.getMovieActors = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+    const { id } = req.params;
+
+    const result = await pool.request()
+      .input("movieId", id)
+      .query(`
+        SELECT 
+          A.ActorID,
+          A.ActorName,
+          A.AvatarURL,
+          MA.RoleName
+        FROM Movie_Actors MA
+        JOIN Actors A ON MA.ActorID = A.ActorID
+        WHERE MA.MovieID = @movieId
+      `);
+
+    res.status(200).json(result.recordset);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMoviesByActor = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+    const { actorId } = req.params;
+
+    const result = await pool.request()
+      .input("actorId", actorId)
+      .query(`
+        SELECT 
+          M.MovieID,
+          M.Title,
+          M.PosterURL,
+          M.ReleaseYear
+        FROM Movie_Actors MA
+        JOIN Movies M ON MA.MovieID = M.MovieID
+        WHERE MA.ActorID = @actorId
+      `);
+
+    res.status(200).json(result.recordset);
+
+  } catch (error) {
+    next(error);
+  }
+};

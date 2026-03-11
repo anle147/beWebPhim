@@ -13,4 +13,8 @@ router.get("/favorite/:userId", movieController.getFavoriteMovies);
 // phải đặt cuối cùng
 router.get("/:id", movieController.getMovieById);
 
+//get dien vien cua phim
+router.get("/:id/actors", movieController.getMovieActors);
+// get phim do dien vien do dong
+router.get("/actor/:actorId", movieController.getMoviesByActor);
 module.exports = router;
