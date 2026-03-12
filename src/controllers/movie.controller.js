@@ -225,3 +225,69 @@ exports.addComment = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getAllGenres = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .query("SELECT * FROM Genres");
+
+    res.status(200).json(result.recordset);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+exports.getMoviesByGenre = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+    const { genreId } = req.params;
+
+    const result = await pool.request()
+      .input("genreId", genreId)
+      .query(`
+        SELECT 
+          M.MovieID,
+          M.Title,
+          M.PosterURL,
+          M.ReleaseYear
+        FROM Movie_Genres MG
+        JOIN Movies M ON MG.MovieID = M.MovieID
+        WHERE MG.GenreID = @genreId
+      `);
+
+    res.status(200).json(result.recordset);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMovieGenres = async (req, res, next) => {
+  try {
+
+    const pool = await poolPromise;
+    const { id } = req.params;
+
+    const result = await pool.request()
+      .input("movieId", id)
+      .query(`
+        SELECT 
+          G.GenreID,
+          G.GenreName
+        FROM Movie_Genres MG
+        JOIN Genres G ON MG.GenreID = G.GenreID
+        WHERE MG.MovieID = @movieId
+      `);
+
+    res.status(200).json(result.recordset);
+
+  } catch (error) {
+    next(error);
+  }
+};
